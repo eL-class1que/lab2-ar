@@ -1,97 +1,111 @@
 import * as THREE from 'three';
+import { ARButton } from 'three/addons/webxr/ARButton.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-// Створюємо сцену
-const scene = new THREE.Scene();
+let camera, scene, renderer;
+let boxMesh, sphereMesh, cylinderMesh;
+let controls;
 
-// Камера
-const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-camera.position.set(0, 1.6, 3); // Задаємо початкову позицію камери
+init();
+animate();
 
-// Рендерер
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.xr.enabled = true;
-document.body.appendChild(renderer.domElement);
+function init() {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
 
-// Освітлення
-const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 2); // Збільшено інтенсивність
-light.position.set(0.5, 1, 0.25);
-scene.add(light);
+  // Створюємо сцену
+  scene = new THREE.Scene();
 
-// Додати об'єкти
-const boxGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-const box = new THREE.Mesh(boxGeometry, boxMaterial);
-box.position.set(0, 0, -2); // Переміщено подалі
-scene.add(box);
+  // Камера
+  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
 
-const sphereGeometry = new THREE.SphereGeometry(0.15, 32, 32);
-const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-sphere.position.set(1, 0, -2); // Переміщено подалі
-scene.add(sphere);
+  // Об'єкт рендерингу
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.xr.enabled = true;
+  container.appendChild(renderer.domElement);
 
-const cylinderGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.3, 32);
-const cylinderMaterial = new THREE.MeshStandardMaterial({ color: 0x0000ff });
-const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-cylinder.position.set(-1, 0, -2); // Переміщено подалі
-scene.add(cylinder);
+  // Світло
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 4);
+  directionalLight.position.set(3, 3, 3);
+  scene.add(directionalLight);
 
-// Анімація об'єктів
-function animate() {
-  box.rotation.y += 0.02;
-  sphere.rotation.x += 0.015;
-  cylinder.rotation.x += 0.01;
-  cylinder.rotation.z += 0.02;
+  const pointLight = new THREE.PointLight(0xffffff, 10, 10);
+  pointLight.position.set(-2, 2, 2);
+  scene.add(pointLight);
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+  scene.add(ambientLight);
+
+  // 1. Створюємо куб
+  const boxGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+  const glassMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0x87CEEB,
+    transparent: true,
+    opacity: 0.5,
+    roughness: 0.4,
+    metalness: 0.8,
+    reflectivity: 1.0,
+    transmission: 0.8,
+  });
+  boxMesh = new THREE.Mesh(boxGeometry, glassMaterial);
+  boxMesh.position.x = -1.5;
+  scene.add(boxMesh);
+
+  // 2. Створюємо сферу
+  const sphereGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+  const emissiveMaterial = new THREE.MeshStandardMaterial({
+    color: 0xff4500,
+    emissive: 0xff4500,
+    emissiveIntensity: 3,
+    metalness: 0.5,
+    roughness: 0.2,
+  });
+  sphereMesh = new THREE.Mesh(sphereGeometry, emissiveMaterial);
+  scene.add(sphereMesh);
+
+  // 3. Створюємо циліндр
+  const cylinderGeometry = new THREE.CylinderGeometry(0.4, 0.4, 1, 32);
+  const goldMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffd700,
+    metalness: 1,
+    roughness: 0.3,
+  });
+  cylinderMesh = new THREE.Mesh(cylinderGeometry, goldMaterial);
+  cylinderMesh.position.x = 1.5;
+  scene.add(cylinderMesh);
+
+  // Позиція для камери
+  camera.position.z = 3;
+
+  // Контролери для 360 огляду на вебсторінці, але не під час AR-сеансу
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  document.body.appendChild(ARButton.createButton(renderer));
+
+  window.addEventListener('resize', onWindowResize, false);
 }
 
-// Рендер-цикл
-renderer.setAnimationLoop(() => {
-  animate();
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+  renderer.setAnimationLoop(render);
+  controls.update();
+}
+
+function render() {
+  rotateObjects();
   renderer.render(scene, camera);
-});
+}
 
-// Додаємо кнопку AR
-document.body.appendChild(createARButton());
-
-// Створення ARButton для входу в AR
-function createARButton() {
-  const button = document.createElement('button');
-  button.textContent = 'Enter AR';
-  button.style.position = 'absolute';
-  button.style.bottom = '20px';
-  button.style.left = '50%';
-  button.style.transform = 'translateX(-50%)';
-  button.style.padding = '12px 24px';
-  button.style.fontSize = '16px';
-  button.style.borderRadius = '10px';
-  button.style.border = 'none';
-  button.style.background = '#008cff';
-  button.style.color = '#fff';
-  button.style.cursor = 'pointer';
-  button.style.zIndex = '999';
-
-  if (navigator.xr) {
-    navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-      if (supported) {
-        button.addEventListener('click', () => {
-          navigator.xr.requestSession('immersive-ar', {
-            requiredFeatures: ['hit-test'],
-            optionalFeatures: ['dom-overlay'],
-            domOverlay: { root: document.body }
-          }).then((session) => {
-            renderer.xr.setSession(session);
-          });
-        });
-      } else {
-        button.textContent = 'AR not supported';
-        button.disabled = true;
-      }
-    });
-  } else {
-    button.textContent = 'WebXR not available';
-    button.disabled = true;
-  }
-
-  return button;
+function rotateObjects() {
+  boxMesh.rotation.y += 0.01;
+  sphereMesh.rotation.x += 0.01;
+  cylinderMesh.rotation.x += 0.01;
 }
