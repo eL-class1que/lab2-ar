@@ -5,6 +5,7 @@ const scene = new THREE.Scene();
 
 // Камера
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+camera.position.set(0, 1.6, 3); // Задаємо початкову позицію камери
 
 // Рендерер
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -13,7 +14,7 @@ renderer.xr.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 // Освітлення
-const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 2); // Збільшено інтенсивність
 light.position.set(0.5, 1, 0.25);
 scene.add(light);
 
@@ -21,19 +22,19 @@ scene.add(light);
 const boxGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
 const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 const box = new THREE.Mesh(boxGeometry, boxMaterial);
-box.position.set(-0.4, 0, -1);
+box.position.set(0, 0, -2); // Переміщено подалі
 scene.add(box);
 
 const sphereGeometry = new THREE.SphereGeometry(0.15, 32, 32);
 const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-sphere.position.set(0, 0, -1);
+sphere.position.set(1, 0, -2); // Переміщено подалі
 scene.add(sphere);
 
 const cylinderGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.3, 32);
 const cylinderMaterial = new THREE.MeshStandardMaterial({ color: 0x0000ff });
 const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-cylinder.position.set(0.4, 0, -1);
+cylinder.position.set(-1, 0, -2); // Переміщено подалі
 scene.add(cylinder);
 
 // Анімація об'єктів
