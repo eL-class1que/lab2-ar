@@ -35,7 +35,8 @@ function init() {
     scene.add(ambientLight);
     
     // Додаємо GLTF модель на сцену
-    const modelUrl = 'file:///C:/Users/kindr/Downloads/spider-man_big_time/scene.gltf';  // Шлях до вашої моделі
+    const modelUrl = 'https://drive.google.com/uc?id=1Jp-muUbzjR8vg7Ky9Qup1MRf3sdY-URf';
+    const binUrl = 'https://drive.google.com/uc?id=1rTbZJWXjGOiXSpjxiQYMUioK_w3oHUe2';
 
     // Створюємо завантажувач
     loader = new GLTFLoader();
@@ -81,6 +82,7 @@ function init() {
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
@@ -98,6 +100,8 @@ let degrees = 0; // кут для оберту нашої моделі
 function rotateModel() {
     if (model !== undefined) {
         // допустима межа градусів - від 0 до 360
-        // Після 360 three.js сприйматиме 360 як 0, 361
-    }
-  }
+        // Після 360 three.js сприйматиме 360 як 0, 361 як 1, 362 як 2 і так далі
+        degrees = degrees + 0.2; 
+        model.rotation.x = THREE.MathUtils.degToRad(degrees); // тут перетворюємо градуси у радіани
+    } 
+}
