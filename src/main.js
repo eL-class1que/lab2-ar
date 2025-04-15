@@ -1,111 +1,103 @@
-import * as THREE from 'three';
-import { ARButton } from 'three/addons/webxr/ARButton.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import './style.css'
+
+import * as THREE from "three"
+import { ARButton } from "three/addons/webxr/ARButton.js"
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 let camera, scene, renderer;
-let boxMesh, sphereMesh, cylinderMesh;
-let controls;
+let loader;
+let model;
 
 init();
 animate();
 
 function init() {
-  const container = document.createElement('div');
-  document.body.appendChild(container);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
 
-  // Створюємо сцену
-  scene = new THREE.Scene();
+    scene = new THREE.Scene();
 
-  // Камера
-  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
 
-  // Об'єкт рендерингу
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.xr.enabled = true;
-  container.appendChild(renderer.domElement);
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.outputEncoding = THREE.sRGBEncoding;
 
-  // Світло
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 4);
-  directionalLight.position.set(3, 3, 3);
-  scene.add(directionalLight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.xr.enabled = true; // Не забуваємо про цей рядок коду.
+    container.appendChild(renderer.domElement);
 
-  const pointLight = new THREE.PointLight(0xffffff, 10, 10);
-  pointLight.position.set(-2, 2, 2);
-  scene.add(pointLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2); 
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-  scene.add(ambientLight);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2); 
+    scene.add(ambientLight);
+    
+    // Додаємо GLTF модель на сцену
+    const modelUrl = 'file:///C:/Users/kindr/Downloads/spider-man_big_time/scene.gltf';  // Шлях до вашої моделі
 
-  // 1. Створюємо куб
-  const boxGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
-  const glassMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x87CEEB,
-    transparent: true,
-    opacity: 0.5,
-    roughness: 0.4,
-    metalness: 0.8,
-    reflectivity: 1.0,
-    transmission: 0.8,
-  });
-  boxMesh = new THREE.Mesh(boxGeometry, glassMaterial);
-  boxMesh.position.x = -1.5;
-  scene.add(boxMesh);
+    // Створюємо завантажувач
+    loader = new GLTFLoader();
+	loader.load(
+        modelUrl,
+        function (gltf) {
+            model = gltf.scene;
+            model.position.z = -10;
+            scene.add(model);
 
-  // 2. Створюємо сферу
-  const sphereGeometry = new THREE.SphereGeometry(0.6, 32, 32);
-  const emissiveMaterial = new THREE.MeshStandardMaterial({
-    color: 0xff4500,
-    emissive: 0xff4500,
-    emissiveIntensity: 3,
-    metalness: 0.5,
-    roughness: 0.2,
-  });
-  sphereMesh = new THREE.Mesh(sphereGeometry, emissiveMaterial);
-  scene.add(sphereMesh);
+            // Створюємо матеріал для моделі (якщо потрібно)
+            const goldMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffd700, // Золотий колір
+                metalness: 1,
+                roughness: 0.1,
+            });
+            
+            // Змінюємо модель (якщо потрібно)
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = goldMaterial;
+                    child.material.needsUpdate = true;
+                }
+            });
 
-  // 3. Створюємо циліндр
-  const cylinderGeometry = new THREE.CylinderGeometry(0.4, 0.4, 1, 32);
-  const goldMaterial = new THREE.MeshStandardMaterial({
-    color: 0xffd700,
-    metalness: 1,
-    roughness: 0.3,
-  });
-  cylinderMesh = new THREE.Mesh(cylinderGeometry, goldMaterial);
-  cylinderMesh.position.x = 1.5;
-  scene.add(cylinderMesh);
+            console.log("Model added to scene");
+        },
 
-  // Позиція для камери
-  camera.position.z = 3;
+        function (xhr) {
+            // console.log((xhr.loaded / xhr.total * 100) + '% loaded' );
+        },
 
-  // Контролери для 360 огляду на вебсторінці, але не під час AR-сеансу
-  controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
+        function (error) {
+            console.error(error);
+        }
+    );
 
-  document.body.appendChild(ARButton.createButton(renderer));
+    document.body.appendChild(ARButton.createButton(renderer));
 
-  window.addEventListener('resize', onWindowResize, false);
+    window.addEventListener('resize', onWindowResize, false);
 }
 
 function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function animate() {
-  renderer.setAnimationLoop(render);
-  controls.update();
+    renderer.setAnimationLoop(render);
 }
 
 function render() {
-  rotateObjects();
-  renderer.render(scene, camera);
+    rotateModel();
+    renderer.render(scene, camera);
 }
-
-function rotateObjects() {
-  boxMesh.rotation.y += 0.01;
-  sphereMesh.rotation.x += 0.01;
-  cylinderMesh.rotation.x += 0.01;
-}
+    
+let degrees = 0; // кут для оберту нашої моделі
+    
+function rotateModel() {
+    if (model !== undefined) {
+        // допустима межа градусів - від 0 до 360
+        // Після 360 three.js сприйматиме 360 як 0, 361
+    }
+  }
