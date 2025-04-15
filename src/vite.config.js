@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/lab2-ar/', // ← додали правильний base!
+  base: '/lab2-ar/',
   build: {
     outDir: 'docs'
   }
