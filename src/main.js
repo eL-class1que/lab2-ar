@@ -1,16 +1,23 @@
 import * as THREE from 'three';
 
+// Створюємо сцену
 const scene = new THREE.Scene();
+
+// Камера
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+
+// Рендерер
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.xr.enabled = true;
 document.body.appendChild(renderer.domElement);
 
+// Освітлення
 const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
 light.position.set(0.5, 1, 0.25);
 scene.add(light);
 
+// Додати об'єкти
 const boxGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
 const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 const box = new THREE.Mesh(boxGeometry, boxMaterial);
@@ -29,6 +36,7 @@ const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
 cylinder.position.set(0.4, 0, -1);
 scene.add(cylinder);
 
+// Анімація об'єктів
 function animate() {
   box.rotation.y += 0.02;
   sphere.rotation.x += 0.015;
@@ -36,15 +44,17 @@ function animate() {
   cylinder.rotation.z += 0.02;
 }
 
+// Рендер-цикл
 renderer.setAnimationLoop(() => {
   animate();
   renderer.render(scene, camera);
 });
 
-// Кнопка AR
-document.body.appendChild(ARButton());
+// Додаємо кнопку AR
+document.body.appendChild(createARButton());
 
-function ARButton() {
+// Створення ARButton для входу в AR
+function createARButton() {
   const button = document.createElement('button');
   button.textContent = 'Enter AR';
   button.style.position = 'absolute';
